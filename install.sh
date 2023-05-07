@@ -1,17 +1,16 @@
 #!/bin/bash
 
-echo "A continuacion le pediremos los valores para configurar en el archivo .ini"
-
-read -p "Ingrese ID: " id
-read -p "Ingrese numero de Legajo: " legajo
-read -p "Ingrese numero de PIN (DOC): " pin
-
 
 install_dependencies() {
-    python -m venv .
-    source /bin/activate
+    if [[ ! -d "bin" ]]; then
+        python -m venv .
+    fi
+
+    source bin/activate
     pip install -r requirements.txt
+    deactivate
 }
+
 
 verify_pip() {
     echo $(pip3 --version)
@@ -54,16 +53,24 @@ install_packages_arch() {
 }
 
 
-cat << EOF > config.ini
-[CREDENTIALS]
-SENSOR_MANUAL=$id
-PIN=$legajo
-LEGAJO=$pin
+if [[ ! -f "config.ini" ]]; then
+    echo "A continuacion le pediremos los valores para configurar en el archivo .ini"
 
-[DEFAULT]
-SCREEN=True
+    read -p "Ingrese ID: " id
+    read -p "Ingrese numero de Legajo: " legajo
+    read -p "Ingrese numero de PIN (DOC): " pin
+
+    cat << EOF > config.ini
+    [CREDENTIALS]
+    SENSOR_MANUAL=$id
+    PIN=$legajo
+    LEGAJO=$pin
+
+    [DEFAULT]
+    SCREEN=True
 
 EOF
+fi
 
 distro=$(cat /etc/os-release | grep -E '^ID_LIKE=' | cut -d'=' -f2 | tr -d '"')
 
@@ -78,4 +85,6 @@ case "$distro" in
         install_packages_arch
         ;;
 esac
+
+
 
